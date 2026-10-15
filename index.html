@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="READLOG — Your personal reading shelf. Track books to read, books in progress, and finished stories with instant search and local persistence.">
+  <meta name="referrer" content="no-referrer">
+  
+  <!-- Content Security Policy: Strict client-side isolation with pinned CDN access for HEIC decoding and Google Fonts -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'none'; frame-ancestors 'none';">
+  
+  <meta name="description" content="READLOG — Your personal reading shelf. Track books to read, books in progress, and finished stories with cover thumbnails, instant search, and client-side IndexedDB persistence.">
   <title>READLOG — Your Personal Reading Shelf</title>
   
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- Favicon (Inline SVG) -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231b3b2b'><path d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/><path d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/></svg>">
+  <!-- Favicon -->
+  <link rel="icon" href="public/Readlog_Icon.webp" type="image/webp">
 </head>
 <body>
   <!-- Accessible Skip Link -->
@@ -27,17 +32,34 @@
       <div class="header-inner">
         <div class="brand">
           <div class="brand-icon" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-              <line x1="8" y1="6" x2="16" y2="6"></line>
-              <line x1="8" y1="10" x2="14" y2="10"></line>
-            </svg>
+            <img src="public/Readlog_Icon.webp" alt="READLOG logo" class="brand-logo-img">
           </div>
           <div class="brand-text">
             <span class="logo-wordmark">READLOG</span>
             <span class="tagline">Your personal reading shelf.</span>
           </div>
+        </div>
+
+        <!-- Header Action Controls: Backup Export & Import -->
+        <div class="header-actions">
+          <button type="button" id="export-backup-btn" class="btn btn-header" title="Download a JSON backup of your shelf and covers" aria-label="Export Backup">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span class="btn-text">Export<span class="btn-text-full"> Backup</span></span>
+          </button>
+          
+          <button type="button" id="import-backup-btn" class="btn btn-header" title="Restore books from a backup file" aria-label="Import Backup">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span class="btn-text">Import<span class="btn-text-full"> Backup</span></span>
+          </button>
+          <input type="file" id="backup-file-input" accept=".json,application/json" class="visually-hidden" aria-label="Upload JSON backup file">
         </div>
       </div>
     </header>
@@ -45,70 +67,57 @@
     <!-- Main Content -->
     <main id="main-content" class="main-content" role="main">
       
-      <!-- Welcome Section -->
-      <section class="welcome-section" aria-labelledby="welcome-heading">
-        <h1 id="welcome-heading" class="welcome-title">Your next great read starts here.</h1>
-        <p class="welcome-subtitle">Keep track of the books you want to read, the stories you're exploring, and the ones you've finished.</p>
-      </section>
+      <!-- Welcome Hero Card Section -->
+      <section class="welcome-card-banner" aria-labelledby="welcome-heading">
+        <div class="welcome-card-content">
+          <div class="welcome-badge">
+            <span class="welcome-badge-icon" aria-hidden="true">✦</span>
+            <span>Personal Reading Companion</span>
+          </div>
+          <h1 id="welcome-heading" class="welcome-title">Your next great read starts here.</h1>
+          <p class="welcome-subtitle">Keep track of the books you want to read, the stories you're exploring, and the ones you've finished.</p>
+          
+          <div class="welcome-highlights">
+            <span class="welcome-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <span>Personal Library</span>
+            </span>
+            <span class="welcome-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Real-Time Progress</span>
+            </span>
+            <span class="welcome-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              <span>Private & Offline</span>
+            </span>
+          </div>
+        </div>
 
-      <!-- Reading Statistics -->
-      <section class="stats-section" aria-label="Reading statistics summary">
-        <div class="stats-grid">
-          <div class="stat-card stat-total">
-            <div class="stat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="welcome-card-visual" aria-hidden="true">
+          <div class="welcome-visual-circle">
+            <div class="welcome-visual-icon">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
                 <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
               </svg>
             </div>
-            <div class="stat-content">
-              <span class="stat-label">Total Books</span>
-              <span id="stat-total" class="stat-value" aria-live="polite">0</span>
-            </div>
-          </div>
-
-          <div class="stat-card stat-to-read">
-            <div class="stat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">To Read</span>
-              <span id="stat-to-read" class="stat-value" aria-live="polite">0</span>
-            </div>
-          </div>
-
-          <div class="stat-card stat-reading">
-            <div class="stat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Reading</span>
-              <span id="stat-reading" class="stat-value" aria-live="polite">0</span>
-            </div>
-          </div>
-
-          <div class="stat-card stat-finished">
-            <div class="stat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-            </div>
-            <div class="stat-content">
-              <span class="stat-label">Finished</span>
-              <span id="stat-finished" class="stat-value" aria-live="polite">0</span>
+            <div class="welcome-floating-tag">
+              <span class="tag-sparkle">★</span>
+              <span>Shelf Active</span>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Storage Recovery Warning Alert (Conditional) -->
+      <!-- Storage Quota & Recovery Warning Alert (Conditional) -->
       <div id="storage-alert" class="alert-banner" role="alert" hidden>
         <div class="alert-icon" aria-hidden="true">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -119,78 +128,483 @@
         </div>
         <div class="alert-message">
           <strong id="storage-alert-title">Storage Notice:</strong>
-          <span id="storage-alert-text">Unable to load stored books. Operating in temporary memory.</span>
+          <span id="storage-alert-text">Operating in local storage mode.</span>
         </div>
         <button type="button" id="storage-alert-dismiss" class="btn-alert-close" aria-label="Dismiss storage notice">
           &times;
         </button>
       </div>
 
-      <!-- Add Book Form Section -->
-      <section class="add-book-section" aria-labelledby="add-book-heading">
-        <div class="section-card">
-          <div class="section-header">
-            <h2 id="add-book-heading" class="section-title">Add a Book to Your Shelf</h2>
-            <p class="section-subtitle">Record a new title and categorize your current reading phase.</p>
-          </div>
-
-          <form id="add-book-form" class="add-book-form" novalidate>
-            <div class="form-grid">
-              
-              <!-- Title Field -->
-              <div class="form-group" id="group-book-title">
-                <label for="book-title" class="form-label">
-                  Book Title <span class="required-indicator" aria-hidden="true">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  id="book-title" 
-                  name="title" 
-                  class="form-input" 
-                  placeholder="e.g., Aadujeevitham" 
-                  autocomplete="off"
-                  aria-required="true"
-                  aria-describedby="title-error"
-                >
-                <div id="title-error" class="form-error" role="alert" aria-live="polite"></div>
+      <!-- Dashboard Grid: Stats & Progress (Left) + Add Book Form (Right) -->
+      <div class="dashboard-grid">
+        
+        <!-- Left Column: Reading Stats & Progress Card -->
+        <aside class="dashboard-column stats-dashboard-column" aria-label="Reading statistics and progress">
+          <div class="section-card progress-overview-card">
+            
+            <div class="progress-card-header">
+              <div class="progress-header-text">
+                <span class="card-eyebrow">
+                  <span class="pulse-beacon" aria-hidden="true"></span>
+                  Reading Journey &amp; Shelf Analytics
+                </span>
+                <h2 class="section-title">Shelf Progress</h2>
+                <p class="section-subtitle">Real-time overview of your reading habits and library breakdown.</p>
               </div>
-
-              <!-- Author Field -->
-              <div class="form-group" id="group-book-author">
-                <label for="book-author" class="form-label">
-                  Author <span class="required-indicator" aria-hidden="true">*</span>
-                </label>
-                <input 
-                  type="text" 
-                  id="book-author" 
-                  name="author" 
-                  class="form-input" 
-                  placeholder="e.g., Benyamin" 
-                  autocomplete="off"
-                  aria-required="true"
-                  aria-describedby="author-error"
-                >
-                <div id="author-error" class="form-error" role="alert" aria-live="polite"></div>
+              <div class="progress-badge" id="shelf-progress-badge" title="Overall completion rate">
+                <span id="progress-percentage-num" class="progress-badge-num">0%</span>
+                <span class="progress-badge-label">Done</span>
               </div>
+            </div>
 
-              <!-- Status Dropdown -->
-              <div class="form-group" id="group-book-status">
-                <label for="book-status" class="form-label">Reading Status</label>
-                <div class="select-wrapper">
-                  <select id="book-status" name="status" class="form-select">
-                    <option value="To read" selected>To read</option>
-                    <option value="Reading">Reading</option>
-                    <option value="Finished">Finished</option>
-                  </select>
-                  <div class="select-arrow" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"></polyline>
+            <!-- Multi-Segment Visual Progress Bar -->
+            <div class="progress-bar-container" aria-label="Reading progress bar">
+              <div class="progress-bar-track">
+                <div id="progress-bar-fill-finished" class="progress-fill fill-finished" style="width: 0%;" title="Finished"></div>
+                <div id="progress-bar-fill-reading" class="progress-fill fill-reading" style="width: 0%;" title="Reading"></div>
+                <div id="progress-bar-fill-toread" class="progress-fill fill-toread" style="width: 0%;" title="To Read"></div>
+              </div>
+              <div class="progress-meta-row">
+                <span id="progress-ratio-text" class="progress-ratio">0 of 0 books finished</span>
+                <div class="progress-legend-chips">
+                  <span class="legend-chip chip-reading"><span class="chip-dot"></span><span id="progress-chip-reading">0 reading</span></span>
+                  <span class="legend-chip chip-toread"><span class="chip-dot"></span><span id="progress-chip-toread">0 to read</span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2x2 Stats Grid (Creative Modern Design) -->
+            <div class="progress-stats-grid">
+              <div class="stat-tile tile-total">
+                <div class="stat-tile-glow" aria-hidden="true"></div>
+                <div class="stat-tile-watermark" aria-hidden="true">
+                  <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+                <div class="stat-tile-top">
+                  <span class="stat-tile-label">Total Books</span>
+                  <div class="stat-tile-icon-box" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
                     </svg>
                   </div>
                 </div>
+                <div class="stat-tile-value" id="stat-total" aria-live="polite">0</div>
+                <div class="stat-tile-footer">
+                  <span class="stat-pill-badge badge-total">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    <span>In your collection</span>
+                  </span>
+                </div>
               </div>
 
+              <div class="stat-tile tile-finished">
+                <div class="stat-tile-glow" aria-hidden="true"></div>
+                <div class="stat-tile-watermark" aria-hidden="true">
+                  <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                </div>
+                <div class="stat-tile-top">
+                  <span class="stat-tile-label">Finished</span>
+                  <div class="stat-tile-icon-box" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <div class="stat-tile-value" id="stat-finished" aria-live="polite">0</div>
+                <div class="stat-tile-footer">
+                  <span class="stat-pill-badge badge-finished">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    <span>Stories completed</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="stat-tile tile-reading">
+                <div class="stat-tile-glow" aria-hidden="true"></div>
+                <div class="stat-tile-watermark" aria-hidden="true">
+                  <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                    <path d="M12 20h9"></path>
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                  </svg>
+                </div>
+                <div class="stat-tile-top">
+                  <span class="stat-tile-label">Reading</span>
+                  <div class="stat-tile-icon-box" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div class="stat-tile-value" id="stat-reading" aria-live="polite">0</div>
+                <div class="stat-tile-footer">
+                  <span class="stat-pill-badge badge-reading">
+                    <span class="live-pulse-dot" aria-hidden="true"></span>
+                    <span>In hands right now</span>
+                  </span>
+                </div>
+              </div>
+
+              <div class="stat-tile tile-to-read">
+                <div class="stat-tile-glow" aria-hidden="true"></div>
+                <div class="stat-tile-watermark" aria-hidden="true">
+                  <svg width="76" height="76" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="stat-tile-top">
+                  <span class="stat-tile-label">To Read</span>
+                  <div class="stat-tile-icon-box" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                <div class="stat-tile-value" id="stat-to-read" aria-live="polite">0</div>
+                <div class="stat-tile-footer">
+                  <span class="stat-pill-badge badge-to-read">
+                    <span class="badge-dot" aria-hidden="true"></span>
+                    <span>Waiting on shelf</span>
+                  </span>
+                </div>
+              </div>
             </div>
+
+            <!-- Reading Momentum Footer -->
+            <div class="progress-footer-quote">
+              <div class="quote-bullet" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div class="quote-text-wrap">
+                <span class="quote-title">Reading Momentum</span>
+                <span id="shelf-momentum-msg" class="quote-desc">Add books to begin tracking your personal shelf.</span>
+              </div>
+            </div>
+
+          </div>
+        </aside>
+
+        <!-- Right Column: Add Book Form Card -->
+        <section class="dashboard-column form-dashboard-column" aria-labelledby="add-book-heading">
+          <div class="section-card add-book-card">
+            
+            <div class="section-header">
+              <span class="card-eyebrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Book Entry
+              </span>
+              <h2 id="add-book-heading" class="section-title">Add a Book to Your Shelf</h2>
+              <p class="section-subtitle">Record a new title, upload a book cover, and categorize your reading progress.</p>
+            </div>
+
+            <form id="add-book-form" class="add-book-form" novalidate>
+              <div class="form-grid-dashboard">
+                
+                <!-- Title Field (Full Width) -->
+                <div class="form-group form-group-full" id="group-book-title">
+                  <div class="form-label-row">
+                    <label for="book-title" class="form-label">
+                      Book Title <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <span id="title-char-count" class="char-count" aria-live="polite">0 / 150</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    id="book-title" 
+                    name="title" 
+                    class="form-input" 
+                    placeholder="e.g., The Midnight Library" 
+                    maxlength="150"
+                    autocomplete="off"
+                    aria-required="true"
+                    aria-describedby="title-error title-char-count"
+                  >
+                  <div id="title-error" class="form-error" role="alert" aria-live="polite"></div>
+                </div>
+
+                <!-- Author Field -->
+                <div class="form-group" id="group-book-author">
+                  <div class="form-label-row">
+                    <label for="book-author" class="form-label">
+                      Author <span class="required-indicator" aria-hidden="true">*</span>
+                    </label>
+                    <span id="author-char-count" class="char-count" aria-live="polite">0 / 100</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    id="book-author" 
+                    name="author" 
+                    class="form-input" 
+                    placeholder="e.g., Matt Haig" 
+                    maxlength="100"
+                    autocomplete="off"
+                    aria-required="true"
+                    aria-describedby="author-error author-char-count"
+                  >
+                  <div id="author-error" class="form-error" role="alert" aria-live="polite"></div>
+                </div>
+
+                <!-- Status Custom Matching Dropdown -->
+                <div class="form-group" id="group-book-status">
+                  <label id="label-book-status" class="form-label">Reading Status</label>
+                  
+                  <div class="custom-select-wrapper" id="custom-status-select-wrap">
+                    <!-- Native Select for accessibility & form serialization -->
+                    <select id="book-status" name="status" class="form-select visually-hidden" tabindex="-1" aria-hidden="true">
+                      <option value="to-read" selected>To read</option>
+                      <option value="reading">Reading</option>
+                      <option value="finished">Finished</option>
+                    </select>
+
+                    <!-- Custom Styled Trigger Button -->
+                    <button 
+                      type="button" 
+                      id="custom-status-trigger" 
+                      class="custom-select-trigger" 
+                      aria-haspopup="listbox" 
+                      aria-expanded="false" 
+                      aria-labelledby="label-book-status custom-status-trigger"
+                    >
+                      <span class="custom-select-current" id="custom-status-current">
+                        <span class="status-indicator-dot dot-to-read" aria-hidden="true"></span>
+                        <span class="custom-select-label">To read</span>
+                      </span>
+                      <span class="custom-select-arrow" aria-hidden="true">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                          <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                      </span>
+                    </button>
+
+                    <!-- Custom Dropdown Menu with Matching Design -->
+                    <div id="custom-status-dropdown" class="custom-dropdown-panel" role="listbox" aria-labelledby="label-book-status" hidden>
+                      <button 
+                        type="button" 
+                        class="custom-dropdown-option is-active" 
+                        role="option" 
+                        data-value="to-read" 
+                        aria-selected="true"
+                      >
+                        <span class="option-badge-icon badge-to-read" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                          </svg>
+                        </span>
+                        <div class="option-content">
+                          <span class="option-title">To read</span>
+                          <span class="option-sub">Planned on your reading wishlist</span>
+                        </div>
+                        <span class="option-check-icon" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </span>
+                      </button>
+
+                      <button 
+                        type="button" 
+                        class="custom-dropdown-option" 
+                        role="option" 
+                        data-value="reading" 
+                        aria-selected="false"
+                      >
+                        <span class="option-badge-icon badge-reading" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                          </svg>
+                        </span>
+                        <div class="option-content">
+                          <span class="option-title">Reading</span>
+                          <span class="option-sub">Currently in progress</span>
+                        </div>
+                        <span class="option-check-icon" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </span>
+                      </button>
+
+                      <button 
+                        type="button" 
+                        class="custom-dropdown-option" 
+                        role="option" 
+                        data-value="finished" 
+                        aria-selected="false"
+                      >
+                        <span class="option-badge-icon badge-finished" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                          </svg>
+                        </span>
+                        <div class="option-content">
+                          <span class="option-title">Finished</span>
+                          <span class="option-sub">Completed reading</span>
+                        </div>
+                        <span class="option-check-icon" aria-hidden="true">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            <!-- Thumbnail Upload Field -->
+            <div class="form-group thumbnail-upload-group" id="group-book-thumbnail">
+              <label for="book-thumbnail-input" class="form-label">
+                Book Thumbnail <span class="optional-indicator">(Optional)</span>
+              </label>
+
+              <!-- Drag & Drop Zone -->
+              <div 
+                id="thumbnail-dropzone" 
+                class="thumbnail-dropzone" 
+                role="button" 
+                tabindex="0"
+                aria-label="Upload book thumbnail. Click to upload or drag and drop an image"
+                aria-describedby="thumbnail-hint thumbnail-error thumbnail-notice"
+              >
+                <!-- 1. Empty State: Upload Prompt -->
+                <div id="dropzone-prompt" class="dropzone-prompt">
+                  <div class="upload-icon-badge" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                  </div>
+                  <p class="dropzone-main-text">
+                    <span class="dropzone-text-desktop">
+                      <span class="dropzone-action-text">Click to upload</span> or drag and drop
+                    </span>
+                    <span class="dropzone-text-mobile">
+                      <span class="dropzone-action-text">Tap to upload</span>
+                    </span>
+                  </p>
+                  <p id="thumbnail-hint" class="dropzone-sub-text">JPG, PNG, WEBP, GIF, SVG, AVIF, HEIC. Up to 10 MB</p>
+                </div>
+
+                <!-- 2. Drag-Over State Prompt -->
+                <div id="dropzone-dragover-prompt" class="dropzone-dragover-prompt" hidden>
+                  <div class="upload-icon-badge upload-icon-active" aria-hidden="true">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 3v12"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    </svg>
+                  </div>
+                  <p class="dropzone-dragover-text">Drop your image here</p>
+                </div>
+
+                <!-- 3. Processing Spinner Overlay -->
+                <div id="thumbnail-loading" class="dropzone-loading" hidden aria-live="polite">
+                  <div class="spinner" aria-hidden="true"></div>
+                  <span class="loading-text">Processing image...</span>
+                </div>
+
+                <!-- 4. Selected State: Modern Preview Card -->
+                <div id="thumbnail-preview-card" class="thumbnail-preview-card" hidden>
+                  <div class="preview-thumbnail-wrap" title="Click or drop a new file to change cover">
+                    <img id="thumbnail-preview-img" class="preview-cover-img" alt="Selected book cover thumbnail">
+                    <div class="preview-replace-overlay" aria-hidden="true">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <span>Replace</span>
+                    </div>
+                  </div>
+
+                  <div class="preview-details">
+                    <div class="preview-header">
+                      <span class="preview-filename" id="preview-filename" title="Cover Image">cover-image.jpg</span>
+                      <span class="preview-badge-ready" id="preview-badge-ready">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Ready
+                      </span>
+                    </div>
+
+                    <div class="preview-meta-grid">
+                      <div class="preview-meta-item">
+                        <span class="meta-label">Format:</span>
+                        <span class="meta-value" id="preview-format">WEBP</span>
+                      </div>
+                      <div class="preview-meta-item">
+                        <span class="meta-label">Size:</span>
+                        <span class="meta-value" id="preview-filesize">0 KB</span>
+                      </div>
+                      <div class="preview-meta-item">
+                        <span class="meta-label">Dimensions:</span>
+                        <span class="meta-value" id="preview-dimensions">0 × 0 px</span>
+                      </div>
+                    </div>
+
+                    <div class="preview-actions">
+                      <button type="button" id="change-thumbnail-btn" class="btn-preview-action btn-change-image" aria-label="Change cover image">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="17 8 12 3 7 8"></polyline>
+                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Change image</span>
+                      </button>
+
+                      <button type="button" id="remove-thumbnail-btn" class="btn-preview-action btn-remove-image" aria-label="Remove cover image">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden Native File Input -->
+                <input 
+                  type="file" 
+                  id="book-thumbnail-input" 
+                  name="thumbnail" 
+                  accept="image/*" 
+                  class="visually-hidden" 
+                  tabindex="-1"
+                >
+              </div>
+
+              <!-- Inline Alert Error Message with SVG Icon -->
+              <div id="thumbnail-error" class="form-error thumbnail-form-error" role="alert" aria-live="polite"></div>
+              <div id="thumbnail-notice" class="form-notice" role="status" aria-live="polite"></div>
+              <div id="thumbnail-sr-status" class="visually-hidden" aria-live="polite"></div>
+            </div>
+
+            <!-- General Form Feedback / Global Error -->
+            <div id="form-general-error" class="form-error" role="alert" aria-live="polite"></div>
 
             <!-- Form Actions -->
             <div class="form-actions">
@@ -199,19 +613,31 @@
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                <span>Add Book</span>
+                <span id="add-book-btn-text">Add Book</span>
               </button>
             </div>
           </form>
         </div>
       </section>
+    </div>
 
       <!-- Book List & Search Section -->
       <section class="shelf-section" aria-labelledby="shelf-heading">
         <div class="shelf-header">
           <div class="shelf-header-left">
-            <h2 id="shelf-heading" class="shelf-title">Your Reading Shelf</h2>
-            <span id="shelf-count-badge" class="count-badge" aria-live="polite">0 books</span>
+            <div class="shelf-header-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div class="shelf-header-text">
+              <div class="shelf-title-row">
+                <h2 id="shelf-heading" class="shelf-title">Your Reading Shelf</h2>
+                <span id="shelf-count-badge" class="count-badge" aria-live="polite">0 books</span>
+              </div>
+              <p class="shelf-subtitle">Curated collection & reading status</p>
+            </div>
           </div>
 
           <!-- Search Field -->
@@ -238,6 +664,47 @@
                 </svg>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- Bulk Action Toolbar (visible when books are selected) -->
+        <div id="bulk-action-bar" class="bulk-action-bar" hidden aria-live="polite">
+          <div class="bulk-bar-left">
+            <label class="bulk-select-all-label" for="select-all-checkbox" aria-label="Select all books">
+              <input type="checkbox" id="select-all-checkbox" class="bulk-checkbox-input" aria-label="Select all books">
+              <span class="bulk-checkbox-custom" aria-hidden="true"></span>
+              <span class="bulk-select-all-text">Select all</span>
+            </label>
+            <span id="bulk-count-label" class="bulk-count-label">0 selected</span>
+            <button type="button" id="bulk-deselect-btn" class="bulk-deselect-btn" aria-label="Deselect all">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div class="bulk-bar-right">
+            <!-- Bulk Status Change -->
+            <div class="bulk-status-group" role="group" aria-label="Change status of selected books">
+              <span class="bulk-status-label" aria-hidden="true">Set status:</span>
+              <button type="button" class="bulk-status-btn bulk-status-to-read" data-bulk-status="to-read" aria-label="Set selected to To Read">
+                <span class="bulk-status-dot"></span>To read
+              </button>
+              <button type="button" class="bulk-status-btn bulk-status-reading" data-bulk-status="reading" aria-label="Set selected to Reading">
+                <span class="bulk-status-dot"></span>Reading
+              </button>
+              <button type="button" class="bulk-status-btn bulk-status-finished" data-bulk-status="finished" aria-label="Set selected to Finished">
+                <span class="bulk-status-dot"></span>Finished
+              </button>
+            </div>
+            <!-- Bulk Delete -->
+            <button type="button" id="bulk-delete-btn" class="bulk-delete-btn" aria-label="Delete selected books">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              Delete selected
+            </button>
           </div>
         </div>
 
@@ -287,6 +754,175 @@
     </footer>
   </div>
 
+  <!-- Accessible Edit Book Modal Dialog -->
+  <div id="edit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" hidden>
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <h3 id="edit-modal-title" class="modal-title">Edit Book Details</h3>
+        <button type="button" id="cancel-edit-x" class="modal-close-btn" aria-label="Close edit dialog">&times;</button>
+      </div>
+      <form id="edit-book-form" novalidate>
+        <div class="modal-body">
+          
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="edit-book-title" class="form-label">
+                Book Title <span class="required-indicator" aria-hidden="true">*</span>
+              </label>
+              <span id="edit-title-char-count" class="char-count" aria-live="polite">0 / 150</span>
+            </div>
+            <input 
+              type="text" 
+              id="edit-book-title" 
+              name="title" 
+              class="form-input" 
+              maxlength="150"
+              required 
+              aria-required="true"
+              aria-describedby="edit-title-error edit-title-char-count"
+            >
+            <div id="edit-title-error" class="form-error" role="alert" aria-live="polite"></div>
+          </div>
+
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="edit-book-author" class="form-label">
+                Author <span class="required-indicator" aria-hidden="true">*</span>
+              </label>
+              <span id="edit-author-char-count" class="char-count" aria-live="polite">0 / 100</span>
+            </div>
+            <input 
+              type="text" 
+              id="edit-book-author" 
+              name="author" 
+              class="form-input" 
+              maxlength="100"
+              required 
+              aria-required="true"
+              aria-describedby="edit-author-error edit-author-char-count"
+            >
+            <div id="edit-author-error" class="form-error" role="alert" aria-live="polite"></div>
+          </div>
+
+          <div class="form-group" id="edit-group-book-status">
+            <label id="edit-label-book-status" class="form-label">Reading Status</label>
+            <div class="custom-select-wrapper" id="edit-custom-status-select-wrap">
+              <select id="edit-book-status" name="status" class="form-select visually-hidden" tabindex="-1" aria-hidden="true">
+                <option value="to-read">To read</option>
+                <option value="reading">Reading</option>
+                <option value="finished">Finished</option>
+              </select>
+
+              <button 
+                type="button" 
+                id="edit-custom-status-trigger" 
+                class="custom-select-trigger" 
+                aria-haspopup="listbox" 
+                aria-expanded="false" 
+                aria-labelledby="edit-label-book-status edit-custom-status-trigger"
+              >
+                <span class="custom-select-current" id="edit-custom-status-current">
+                  <span class="status-indicator-dot dot-to-read" aria-hidden="true"></span>
+                  <span class="custom-select-label">To read</span>
+                </span>
+                <span class="custom-select-arrow" aria-hidden="true">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
+              </button>
+
+              <div id="edit-custom-status-dropdown" class="custom-dropdown-panel" role="listbox" aria-labelledby="edit-label-book-status" hidden>
+                <button type="button" class="custom-dropdown-option is-active" role="option" data-value="to-read" aria-selected="true">
+                  <span class="option-badge-icon badge-to-read" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                  </span>
+                  <div class="option-content">
+                    <span class="option-title">To read</span>
+                    <span class="option-sub">Planned on your reading wishlist</span>
+                  </div>
+                  <span class="option-check-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </button>
+
+                <button type="button" class="custom-dropdown-option" role="option" data-value="reading" aria-selected="false">
+                  <span class="option-badge-icon badge-reading" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                  </span>
+                  <div class="option-content">
+                    <span class="option-title">Reading</span>
+                    <span class="option-sub">Currently in progress</span>
+                  </div>
+                  <span class="option-check-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </button>
+
+                <button type="button" class="custom-dropdown-option" role="option" data-value="finished" aria-selected="false">
+                  <span class="option-badge-icon badge-finished" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                  </span>
+                  <div class="option-content">
+                    <span class="option-title">Finished</span>
+                    <span class="option-sub">Completed reading</span>
+                  </div>
+                  <span class="option-check-icon" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Thumbnail Area -->
+          <div class="form-group">
+            <label class="form-label">Book Cover Thumbnail</label>
+            <div class="edit-thumbnail-controls">
+              <div id="edit-thumb-preview-box" class="edit-thumb-preview-box">
+                <img id="edit-thumb-preview-img" class="edit-thumb-preview-img" alt="Cover preview" hidden>
+                <div id="edit-thumb-placeholder" class="edit-thumb-placeholder">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                  </svg>
+                  <span>No Cover</span>
+                </div>
+              </div>
+              <div class="edit-thumb-actions">
+                <button type="button" id="edit-change-thumb-btn" class="btn btn-secondary btn-sm">Change Cover Image</button>
+                <button type="button" id="edit-remove-thumb-btn" class="btn btn-secondary btn-sm" hidden>Remove Cover</button>
+                <input type="file" id="edit-thumbnail-input" accept="image/*" class="visually-hidden" aria-label="Choose new book cover thumbnail">
+                <div id="edit-thumbnail-error" class="form-error" role="alert" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="edit-general-error" class="form-error" role="alert" aria-live="polite"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="save-edit-btn" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Accessible Confirmation Modal for Deletion -->
   <div id="delete-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title" aria-describedby="delete-modal-desc" hidden>
     <div class="modal-dialog">
@@ -306,7 +942,131 @@
     </div>
   </div>
 
-  <!-- Main JavaScript File -->
+  <!-- Accessible Import Mode Modal (Merge vs. Replace) -->
+  <div id="import-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="import-modal-title" aria-describedby="import-modal-desc" hidden>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="import-modal-title" class="modal-title">Restore Backup</h3>
+        <button type="button" id="cancel-import-x" class="modal-close-btn" aria-label="Close import dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="import-modal-desc" class="modal-message">
+          A backup file containing <strong id="import-books-count">0 books</strong> is ready to restore. How would you like to apply it?
+        </p>
+        <div class="import-options">
+          <div class="import-option-card">
+            <strong>Merge:</strong> Add new books from the backup to your current shelf (skipping exact duplicates).
+          </div>
+          <div class="import-option-card">
+            <strong>Replace:</strong> Wipe your current shelf and replace it entirely with the backup contents.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="cancel-import-btn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="import-merge-btn" class="btn btn-primary">Merge Books</button>
+        <button type="button" id="import-replace-btn" class="btn btn-danger">Replace Shelf</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accessible Import Progress Modal -->
+  <div id="import-progress-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="import-progress-title" hidden>
+    <div class="modal-dialog modal-dialog-progress">
+      <div class="modal-header">
+        <div class="import-progress-header-left">
+          <div id="import-progress-icon-box" class="import-progress-icon-box" aria-hidden="true">
+            <svg id="import-progress-spinner-icon" class="import-progress-spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+            </svg>
+            <svg id="import-progress-success-icon" class="import-progress-success-check" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" hidden>
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h3 id="import-progress-title" class="modal-title">Restoring Shelf Backup</h3>
+            <p id="import-progress-subtitle" class="import-progress-subtitle">Preparing books...</p>
+          </div>
+        </div>
+        <!-- Live Running Stopwatch / Timestamp Badge -->
+        <div class="import-timer-badge" id="import-timer-badge" title="Live elapsed time" aria-label="Running elapsed time">
+          <span class="import-timer-pulse" id="import-timer-pulse" aria-hidden="true"></span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="import-running-time" class="import-timer-digits">00:00.0</span>
+        </div>
+      </div>
+
+      <div class="modal-body import-progress-body">
+        <!-- Progress Bar and Percentage -->
+        <div class="import-progress-bar-container">
+          <div class="import-progress-bar-header">
+            <span class="import-progress-label" id="import-status-text">Importing books...</span>
+            <span class="import-percent-text" id="import-percent-text">0%</span>
+          </div>
+          <div class="import-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="import-progressbar" aria-label="Import progress">
+            <div class="import-progress-fill" id="import-progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Metric Cards: Completed, Remaining, Estimated Time -->
+        <div class="import-stats-grid">
+          <div class="import-stat-card">
+            <span class="import-stat-label">Completed</span>
+            <span class="import-stat-val" id="import-stat-completed">0 <span class="import-stat-total">/ 0</span></span>
+            <span class="import-stat-sub" id="import-stat-completed-sub">0% done</span>
+          </div>
+          <div class="import-stat-card">
+            <span class="import-stat-label">Remaining</span>
+            <span class="import-stat-val" id="import-stat-remaining">0</span>
+            <span class="import-stat-sub" id="import-stat-remaining-sub">books left</span>
+          </div>
+          <div class="import-stat-card">
+            <span class="import-stat-label">Time Remaining</span>
+            <span class="import-stat-val" id="import-stat-eta">~00:00</span>
+            <span class="import-stat-sub" id="import-stat-eta-sub">estimated</span>
+          </div>
+        </div>
+
+        <!-- Current Processing Item Pill -->
+        <div class="import-current-item-box" id="import-current-item-box">
+          <span class="import-current-label">Current:</span>
+          <span class="import-current-title" id="import-current-title">Starting import...</span>
+        </div>
+
+        <!-- Summary Notice (Shown on completion) -->
+        <div class="import-complete-summary" id="import-complete-summary" hidden>
+          <div class="import-summary-item">
+            <span class="summary-dot summary-dot-success"></span>
+            <span id="import-summary-imported">0 books added</span>
+          </div>
+          <div class="import-summary-item">
+            <span class="summary-dot summary-dot-skipped"></span>
+            <span id="import-summary-skipped">0 duplicates skipped</span>
+          </div>
+          <div class="import-summary-item">
+            <span class="summary-dot summary-dot-time"></span>
+            <span id="import-summary-time">Finished in 00:00.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer import-progress-footer">
+        <button type="button" id="import-progress-done-btn" class="btn btn-primary" style="display: none;">
+          Done &amp; View Shelf
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Toast Notification Region -->
+  <div id="toast-container" class="toast-container" aria-live="polite" role="status"></div>
+
+  <!-- Local Pinned IDB Library -->
+  <script src="lib/idb.js"></script>
+  <!-- Main Application Logic -->
   <script src="app.js"></script>
 </body>
 </html>
