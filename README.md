@@ -75,7 +75,7 @@ A minimalist, high-performance, and secure personal reading shelf application bu
   - Visual selection counter pill (`X books selected`).
   - Clear **"Select all"** text toggle button to select or deselect all visible matching cards in one click.
   - **Batch Status Update**: Change the status of all selected books simultaneously (*To Read*, *Reading*, *Finished*).
-  - **Batch Delete**: Remove all selected books with an accessible confirmation dialog showing the exact count.
+  - **Batch Delete**: Remove all selected books using the custom, accessible `#delete-modal` dialog (matching individual deletion styling with dynamic counts) instead of native browser prompts.
 
 ### ⏱️ Live Stopwatch Progress Modal
 - Integrated into **Import**, **Bulk Delete**, and **Bulk Status Update** operations:
@@ -90,6 +90,8 @@ A minimalist, high-performance, and secure personal reading shelf application bu
   - **Edit Pill**: Translucent glass background with dark forest green border and icon.
   - **Delete Pill**: Soft translucent glass background with coral red border and icon.
   - Comfortable touch target height (`42px`) meeting WCAG mobile touch guidelines.
+- **Zero Background Scroll on Modals**: Locks `body` and `html` scrolling with `overscroll-behavior: none` and `scrollbar-gutter: stable` whenever any popup or modal is open.
+- **Backdrop Touch Guards & Dismissal**: Touch movements on modal backdrops are prevented from propagating to the background page on mobile, with tap-to-dismiss support on backdrops.
 - **Zero Tap Highlight**: Added `-webkit-tap-highlight-color: transparent !important` globally across all interactive elements.
 - **Scroll Position Lock**: Deleting a book removes the card directly from the DOM without collapsing layout height or jumping the viewport to the top of the page.
 - **Mobile Keyboard Auto-Open Prevention**: Suppressed automatic `focus()` calls on mobile devices (`<= 640px`) during deletions and form submissions to keep the virtual keyboard closed until explicitly tapped by the user.

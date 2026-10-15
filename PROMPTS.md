@@ -336,3 +336,33 @@ In `style.css`, added the universally recognized HTML5 reset rule immediately af
 
 ### What Changed
 - Comprehensive synchronization of `README.md` and `PROMPTS.md` documenting every feature, security policy, user interface enhancement, mobile optimization, performance benchmark, and architectural decision.
+
+---
+
+## Prompt 17: Background Scroll Lock During Popups / Modals
+
+### Actual Prompt
+> "remoeve the bg scroll while all the pop up are ope make it correct"
+
+### What Changed
+- Implemented comprehensive background scroll locking whenever any popup or modal is active:
+  - Added `html.modal-open, body.modal-open { overflow: hidden !important; overscroll-behavior: none !important; }` in `style.css`.
+  - Added `scrollbar-gutter: stable;` to `html` to prevent layout shifts when scrollbars are toggled.
+  - Added `syncScrollLock()` and a `MutationObserver` on all modal elements (`dom.deleteModal`, `dom.editModal`, `dom.importModal`, `dom.importProgressModal`) observing `hidden` attribute changes to keep body scroll locking perfectly in sync.
+  - Added mobile touch event guard on `.modal-backdrop` (`touchmove` preventDefault) to prevent background touch-dragging on iOS/Android.
+  - Enabled backdrop click-to-close behavior across all modals.
+
+---
+
+## Prompt 18: Unified Custom Delete Modal for Bulk Deletions
+
+### Actual Prompt
+> "the dlete when the sleect all itms and deletethat time browser default delete prompt i sopemign make it not make teh same deete for eacha nd induviudla detele customixed like screen amke it both same make it corrcet"
+
+### What Changed
+- Completely replaced the browser default `confirm()` alert with the custom, styled `#delete-modal` for bulk selections:
+  - Built `openBulkDeleteModal(ids, triggerElement)` adapting the existing confirmation dialog dynamically.
+  - Header updates to *"Delete Selected Books"* or *"Delete Selected Book"*.
+  - Body message clearly states the count: *"Are you sure you want to remove X selected books from your shelf? This action cannot be undone."*
+  - Action button dynamically displays *"Delete X Books"*.
+  - When confirmed, cleanly transitions directly into the live stopwatch progress modal for fast batch execution.

@@ -51,6 +51,7 @@
 
   // Delete Modal State
   let pendingDeleteId = null;
+  let pendingBulkDeleteIds = null;
   let lastActiveElementBeforeModal = null;
 
   // Backup Import State
@@ -164,6 +165,8 @@
 
     // Delete Modal
     deleteModal: document.getElementById('delete-modal'),
+    deleteModalTitle: document.getElementById('delete-modal-title'),
+    deleteModalDesc: document.getElementById('delete-modal-desc'),
     deleteBookName: document.getElementById('delete-book-name'),
     cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
     cancelDeleteX: document.getElementById('cancel-delete-x'),
@@ -1108,18 +1111,25 @@
     updateBulkUI();
   }
 
-  async function bulkDeleteSelected() {
+  function bulkDeleteSelected() {
     const ids = [...selectedBooks];
     const total = ids.length;
     if (total === 0) return;
 
-    if (!confirm(`Delete ${total} ${total === 1 ? 'book' : 'books'}? This cannot be undone.`)) return;
+    // Use the customized Delete Confirmation Modal instead of browser default confirm()
+    openBulkDeleteModal(ids, dom.bulkDeleteBtn);
+  }
+
+  async function executeBatchDelete(ids) {
+    const total = ids.length;
+    if (total === 0) return;
 
     isImportInProgress = true;
 
     // Reset and display the progress modal
     if (dom.importProgressModal) {
       dom.importProgressModal.hidden = false;
+      syncScrollLock();
       dom.importProgressTitle.textContent = 'Deleting Selected Books';
       dom.importProgressSubtitle.textContent = `Removing ${total} book${total === 1 ? '' : 's'} from your shelf...`;
       dom.importStatusText.textContent = 'Deleting books...';
@@ -1285,6 +1295,7 @@
     // Reset and display the progress modal
     if (dom.importProgressModal) {
       dom.importProgressModal.hidden = false;
+      syncScrollLock();
       dom.importProgressTitle.textContent = 'Updating Reading Status';
       dom.importProgressSubtitle.textContent = `Setting status to "${statusLabel}" for ${total} book${total === 1 ? '' : 's'}...`;
       dom.importStatusText.textContent = `Updating to "${statusLabel}"...`;
@@ -2100,6 +2111,24 @@
     }
   }
 
+  // --- Background Scroll Lock Manager for Modals/Popups ---
+  function syncScrollLock() {
+    const isAnyModalOpen = [
+      dom.deleteModal,
+      dom.editModal,
+      dom.importModal,
+      dom.importProgressModal
+    ].some((modal) => modal && !modal.hidden);
+
+    if (isAnyModalOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+  }
+
   // --- Edit Book Modal Logic ---
   function openEditModal(bookId, triggerElement) {
     const book = books.find((b) => b.id === bookId);
@@ -2145,12 +2174,14 @@
     dom.editGeneralError.textContent = '';
 
     dom.editModal.hidden = false;
+    syncScrollLock();
     dom.editBookTitle.focus();
     document.addEventListener('keydown', handleModalKeyDown);
   }
 
   function closeEditModal() {
     dom.editModal.hidden = true;
+    syncScrollLock();
     editingBookId = null;
     editThumbnailBlob = null;
     editRemoveCoverFlag = false;
@@ -2211,19 +2242,48 @@
     }
   }
 
-  // --- Delete Modal Logic ---
+  // --- Delete Modal Logic (Supports Single Book and Bulk Selection) ---
   function openDeleteModal(bookId, bookTitle, triggerElement) {
     pendingDeleteId = bookId;
+    pendingBulkDeleteIds = null;
     lastActiveElementBeforeModal = triggerElement;
-    dom.deleteBookName.textContent = `"${bookTitle}"`;
+
+    if (dom.deleteModalTitle) dom.deleteModalTitle.textContent = 'Delete Book';
+    if (dom.deleteBookName) dom.deleteBookName.textContent = `"${bookTitle}"`;
+    if (dom.confirmDeleteBtn) dom.confirmDeleteBtn.textContent = 'Delete Book';
+
     dom.deleteModal.hidden = false;
+    syncScrollLock();
+    dom.cancelDeleteBtn.focus();
+    document.addEventListener('keydown', handleModalKeyDown);
+  }
+
+  function openBulkDeleteModal(ids, triggerElement) {
+    if (!ids || ids.length === 0) return;
+    pendingDeleteId = null;
+    pendingBulkDeleteIds = ids;
+    lastActiveElementBeforeModal = triggerElement || dom.bulkDeleteBtn;
+
+    const count = ids.length;
+    const titleText = count === 1 ? 'Delete Selected Book' : 'Delete Selected Books';
+    const bookLabel = count === 1 ? '1 selected book' : `${count} selected books`;
+    const btnLabel = count === 1 ? 'Delete Book' : `Delete ${count} Books`;
+
+    if (dom.deleteModalTitle) dom.deleteModalTitle.textContent = titleText;
+    if (dom.deleteBookName) dom.deleteBookName.textContent = bookLabel;
+    if (dom.confirmDeleteBtn) dom.confirmDeleteBtn.textContent = btnLabel;
+
+    dom.deleteModal.hidden = false;
+    syncScrollLock();
     dom.cancelDeleteBtn.focus();
     document.addEventListener('keydown', handleModalKeyDown);
   }
 
   function closeDeleteModal() {
     dom.deleteModal.hidden = true;
+    syncScrollLock();
     pendingDeleteId = null;
+    pendingBulkDeleteIds = null;
     document.removeEventListener('keydown', handleModalKeyDown);
     if (lastActiveElementBeforeModal && typeof lastActiveElementBeforeModal.focus === 'function') {
       lastActiveElementBeforeModal.focus();
@@ -2231,6 +2291,15 @@
   }
 
   async function confirmDelete() {
+    // 1. Bulk Delete Mode
+    if (pendingBulkDeleteIds && pendingBulkDeleteIds.length > 0) {
+      const idsToDelete = [...pendingBulkDeleteIds];
+      closeDeleteModal();
+      await executeBatchDelete(idsToDelete);
+      return;
+    }
+
+    // 2. Individual Single Book Delete Mode
     if (!pendingDeleteId) return;
 
     const targetId = pendingDeleteId;
@@ -2264,7 +2333,9 @@
     showToast(`Removed "${bookTitle}" from your shelf.`, 'info');
 
     dom.deleteModal.hidden = true;
+    syncScrollLock();
     pendingDeleteId = null;
+    pendingBulkDeleteIds = null;
     document.removeEventListener('keydown', handleModalKeyDown);
 
     // Explicitly blur so the page never scrolls to top and mobile keyboard NEVER opens uninvited!
@@ -2428,6 +2499,7 @@
         pendingImportPayload = parsed.books;
         dom.importBooksCount.textContent = `${parsed.books.length} books`;
         dom.importModal.hidden = false;
+        syncScrollLock();
         dom.importMergeBtn.focus();
         document.addEventListener('keydown', handleModalKeyDown);
       } catch (err) {
@@ -2446,6 +2518,7 @@
 
   function closeImportModal() {
     dom.importModal.hidden = true;
+    syncScrollLock();
     pendingImportPayload = null;
     dom.backupFileInput.value = '';
     document.removeEventListener('keydown', handleModalKeyDown);
@@ -2483,6 +2556,7 @@
     if (isImportInProgress) return;
     if (dom.importProgressModal) {
       dom.importProgressModal.hidden = true;
+      syncScrollLock();
     }
     document.removeEventListener('keydown', handleModalKeyDown);
     if (document.activeElement && typeof document.activeElement.blur === 'function') {
@@ -2502,6 +2576,7 @@
     // Reset and display the progress popup
     if (dom.importProgressModal) {
       dom.importProgressModal.hidden = false;
+      syncScrollLock();
       dom.importProgressTitle.textContent = mode === 'replace' ? 'Restoring Shelf (Replace)' : 'Restoring Shelf (Merge)';
       dom.importProgressSubtitle.textContent = `Restoring ${total} book${total === 1 ? '' : 's'} to your shelf...`;
       dom.importStatusText.textContent = 'Importing books...';
@@ -3198,6 +3273,43 @@
     if (dom.storageAlertDismiss) {
       dom.storageAlertDismiss.addEventListener('click', hideStorageAlert);
     }
+
+    // Modal Background Scroll Lock: MutationObserver to keep background scroll lock in sync
+    if (typeof MutationObserver === 'function') {
+      const modalObserver = new MutationObserver(() => {
+        syncScrollLock();
+      });
+      [dom.deleteModal, dom.editModal, dom.importModal, dom.importProgressModal].forEach((modalEl) => {
+        if (modalEl) {
+          modalObserver.observe(modalEl, { attributes: true, attributeFilter: ['hidden'] });
+        }
+      });
+    }
+
+    // Prevent background touch scrolling through modal backdrops on mobile
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+      backdrop.addEventListener('touchmove', (e) => {
+        if (e.target === backdrop) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    });
+
+    // Close modals when clicking the backdrop outside the dialog
+    [
+      { el: dom.deleteModal, close: closeDeleteModal },
+      { el: dom.editModal, close: closeEditModal },
+      { el: dom.importModal, close: closeImportModal },
+      { el: dom.importProgressModal, close: () => { if (!isImportInProgress) closeImportProgressModal(); } }
+    ].forEach(({ el, close }) => {
+      if (el) {
+        el.addEventListener('click', (e) => {
+          if (e.target === el) {
+            close();
+          }
+        });
+      }
+    });
   }
 
   // --- Application Bootstrap ---
